@@ -21,6 +21,7 @@ class Handler implements URLHandler {
                     word = copy;
                     return String.format("New list of words: " + Arrays.asList(word));
                 }
+            }
             }else if (url.getPath().contains("/remove")) {
                 String[] parameters = url.getQuery().split("=");
                 if (parameters[0].equals("word")) {
