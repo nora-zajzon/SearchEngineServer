@@ -3,33 +3,47 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
+interface URLHandler {
+    String handleRequest(URI url);
+}
+
 class Handler implements URLHandler {
-    // The one bit of state on the server: a number that will be manipulated by
-    // various requests.
+    // The one bit of state on the server: a list of chat messages that will be manipulated by various requests.
     List<String> chatMessages = new ArrayList<>();
 
+    @Override
     public String handleRequest(URI url) {
         if (url.getPath().equals("/")) {
             return "Chat messages so far:\n" + String.join("\n", chatMessages);
-        } else{
-            if (url.getPath().contains("/add-message")) {
-                String[] parameters = url.getQuery().split("&");
-                if (parameters[0].substring(0,2).equals("s=")) {
-                    String message = parameters[0].substring(2);
-                    String user = parameters[1].substring(5);
-                    String chatMessage = user + ": " + message;
-                    chatMessages.add(chatMessage);
-                    return "Updated chat messages:\n" + String.join("\n", chatMessages);
-                    }
+        } else if (url.getPath().contains("/add-message")) {
+            String[] parameters = url.getQuery().split("&");
+            String user = "";
+            String message = "";
+
+            for (String param : parameters) {
+                if (param.startsWith("s=")) {
+                    message = param.substring(2);
+                } else if (param.startsWith("user=")) {
+                    user = param.substring(5);
                 }
             }
+
+            if (!user.isEmpty() && !message.isEmpty()) {
+                String chatMessage = user + ": " + message;
+                chatMessages.add(chatMessage);
+                return "Updated chat messages:\n" + String.join("\n", chatMessages);
+            } else {
+                return "Invalid request. Both 's' and 'user' parameters are required.";
+            }
+        } else {
             return "404 Not Found!";
         }
     }
+}
 
-class ChatServer{
+public class ChatServer {
     public static void main(String[] args) throws IOException {
-        if(args.length == 0){
+        if (args.length == 0) {
             System.out.println("Missing port number! Try any number between 1024 to 49151");
             return;
         }
